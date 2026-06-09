@@ -1,4 +1,4 @@
-const CACHE = "hive2026-v7";
+const CACHE = "hive2026-v8";
 const ASSETS = [
   "./",
   "./index.html",
