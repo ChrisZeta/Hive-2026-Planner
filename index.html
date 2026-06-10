@@ -126,6 +126,7 @@ input { font-family: inherit; }
 .set-name { font-size: 9px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.2px; line-height: 1.2; }
 .set-time { font-size: 7px; font-family: monospace; color: var(--text-faint); margin-top: 2px; }
 .sel-dot { position: absolute; top: 3px; right: 3px; width: 9px; height: 9px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 5px; font-weight: 900; color: var(--sel-check-text); }
+.sel-dot-x { width: 18px; height: 18px; font-size: 11px; font-weight: 700; cursor: pointer; }
 .badge-live { font-size: 6px; color: var(--live); font-weight: 700; letter-spacing: 0.8px; }
 .avatar { flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: monospace; border: 1.5px solid var(--border); }
 .avatar-group { display: flex; flex-shrink: 0; }
@@ -643,8 +644,8 @@ function renderSetBlock(set,leftPx,widthPx){
   const bg=isSel?stage.color+"22":"var(--bg-surface)";
   const border=isSel?stage.color:"var(--border)";
   const nameColor=isSel?stage.color:"var(--text-mid)";
-  return`<div class="set-block${past?" set-past":""}" data-id="${set.id}" data-action="toggle" style="left:${leftPx+2}px;width:${widthPx-4}px;background:${bg};border-color:${border};">
-    ${isSel?`<div class="sel-dot" style="background:${stage.color};">✓</div>`:""}
+  return`<div class="set-block${past?" set-past":""}" data-id="${set.id}"${myFilter?"":` data-action="toggle"`} style="left:${leftPx+2}px;width:${widthPx-4}px;background:${bg};border-color:${border};">
+    ${isSel?(myFilter?`<div class="sel-dot sel-dot-x" data-id="${set.id}" data-action="remove" style="background:${stage.color};">×</div>`:`<div class="sel-dot" style="background:${stage.color};">✓</div>`):""}
     <div class="set-block-inner">${renderAvatarGroup(set.artists,compact?18:24)}<div style="min-width:0;flex:1;"><div class="set-name" style="color:${nameColor};">${label}</div>${set.live?`<span class="badge-live">LIVE</span>`:""}</div></div>
     <div class="set-time">${set.start}→${set.end}</div>
   </div>`;
@@ -729,7 +730,11 @@ function renderFullRow(set,showTime){
   const timeBlock=showTime
     ?`<div class="list-time"><div class="list-time-main">${set.start}</div><div class="list-time-end">→ ${set.end}</div></div>`
     :`<div class="list-time" style="min-width:42px;"><div style="font-size:9px;color:var(--text-ghost);font-family:monospace;">TBD</div></div>`;
-  return`<div class="full-item${past?" set-past":""}" data-id="${set.id}" data-action="toggle"><div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">${timeBlock}<div class="stage-bar" style="background:${c};"></div>${renderAvatarGroup(set.artists,36)}<div class="list-info"><div class="list-name" style="${isSel?`color:${c};`:""}">${label}</div><div class="list-meta"><span class="list-stage-name" style="color:${c};">${stage.name}</span>${set.live?`<span class="list-badge-live">● LIVE</span>`:""} ${set.type?`<span class="list-badge">${set.type}</span>`:""}</div></div></div><div class="full-sel" style="${isSel?`background:${c}22;border-color:${c};color:${c};`:""}">${isSel?"✓":"+"}</div></div>`;
+  // In MY mode rows are not tappable; removal happens only via the explicit × button
+  const ctrl=myFilter
+    ?`<button class="remove-btn" data-id="${set.id}" data-action="remove">×</button>`
+    :`<div class="full-sel" style="${isSel?`background:${c}22;border-color:${c};color:${c};`:""}">${isSel?"✓":"+"}</div>`;
+  return`<div class="full-item${past?" set-past":""}" data-id="${set.id}"${myFilter?"":` data-action="toggle"`}><div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">${timeBlock}<div class="stage-bar" style="background:${c};"></div>${renderAvatarGroup(set.artists,36)}<div class="list-info"><div class="list-name" style="${isSel?`color:${c};`:""}">${label}</div><div class="list-meta"><span class="list-stage-name" style="color:${c};">${stage.name}</span>${set.live?`<span class="list-badge-live">● LIVE</span>`:""} ${set.type?`<span class="list-badge">${set.type}</span>`:""}</div></div></div>${ctrl}</div>`;
 }
 
 function renderFullList(){
