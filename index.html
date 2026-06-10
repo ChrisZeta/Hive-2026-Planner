@@ -953,7 +953,10 @@ render();
 bindOutsideClick();
 loadSelectedFromIDB();
 scrollTimelineToNow();
-setTimeout(maybeShowInstall,900);
+setTimeout(()=>{
+  maybeShowDailyMessage();
+  if(!document.getElementById("dailyOverlay"))maybeShowInstall();
+},900);
 
 function scrollTimelineToNow(){
   if(!festNow)return;
@@ -1044,6 +1047,74 @@ function maybeShowInstall(){
         deferredPrompt.userChoice.then(()=>{deferredPrompt=null;card.remove();});
       }else{card.remove();}
     }
+  });
+}
+
+// ===== DAILY MESSAGES =====
+// One message per festival day, shown once on the first launch after 09:00 of that day.
+// "after" shows on launches following the festival (from June 22 onward).
+// A message counts as "read" ONLY when the button is tapped - closing the app does not.
+const DAILY_MESSAGES={
+  thursday:{title:"🐝 THURSDAY",text:"Welcome to Ferropolis. It's a junkyard. A beautiful, loud, slightly dangerous junkyard. Not here yet? Move. If you're already here: have a great warm up night. If you're not: you don't deserve the wish yet."},
+  friday:{title:"🐝 FRIDAY",text:"App open. Noted. Appreciated. Now a brief public service announcement from your unofficial festival planner: drink water. Aggressively. I didn't build this thing for you to collapse on day one. Have a fantastic day one."},
+  saturday:{title:"🐝 SATURDAY",text:"Congratulations on surviving day one. I had moderate confidence in you. You exceeded expectations. Slightly. Have a wonderful Saturday."},
+  sunday:{title:"🐝 SUNDAY",text:"How are you doing? Don't answer that. The app doesn't support it yet. You opened it though. I'm marking you as alive. Have a brilliant final day."},
+  after:{title:"🐝 THAT'S A WRAP",text:"That's it. Hive is over. You survived and I'm almost impressed. Go home, shower, follow @chriszeta_raw. In that order."}
+};
+
+// Decides which daily-message id should show right now, or null.
+function getDailyMessageId(){
+  const fn=getFestivalNow();
+  if(fn)return fn.day;            // live festival day (respects the 09:00 window)
+  // Thursday warmup starts at 18:00 in the timeline, but the daily message should be
+  // available from 09:00 like the other days. Handle that window explicitly.
+  const now=new Date();
+  if(now.getFullYear()===2026&&now.getMonth()===5){
+    const curMin=now.getHours()*60+now.getMinutes();
+    if(now.getDate()===FEST_DATES.thursday&&curMin>=540&&curMin<18*60)return "thursday";
+  }
+  if(isAfterFestival())return "after";
+  return null;
+}
+
+// Production: festival is 18-21 June 2026, so "after" = from 22 June onward.
+function isAfterFestival(){
+  const now=new Date();
+  if(now.getFullYear()>2026)return true;
+  if(now.getFullYear()<2026)return false;
+  if(now.getMonth()>5)return true;   // after June
+  if(now.getMonth()<5)return false;
+  return now.getDate()>=22;          // 22 June or later (day after Sunday-21 window)
+}
+
+// Bump MSG_VER to reset everyone's "already read" state on the next build.
+const MSG_VER="v2";
+function msgKey(id){return "hive_msg_"+MSG_VER+"_"+id;}
+
+function maybeShowDailyMessage(){
+  const id=getDailyMessageId();
+  if(!id)return;
+  const msg=DAILY_MESSAGES[id];
+  if(!msg)return;
+  if(persistGetSync(msgKey(id))==="1")return; // already read (button was tapped before)
+  const card=document.createElement("div");
+  card.className="install-overlay";
+  card.id="dailyOverlay";
+  card.innerHTML=`
+    <div class="install-card">
+      <div class="install-title">${msg.title}</div>
+      <div class="install-text">${msg.text}</div>
+      <div class="install-actions">
+        <button class="install-btn install-btn-primary" data-daily="close">LET'S GO 🐝</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(card);
+  // Mark as read ONLY when the button is tapped. Closing the app (no tap) leaves it unread,
+  // so it will reappear on the next launch. For "after", one tap silences it for all later days.
+  card.addEventListener("click",(e)=>{
+    const t=e.target.closest("[data-daily]");
+    if(t){persistSet(msgKey(id),"1");card.remove();}
   });
 }
 
