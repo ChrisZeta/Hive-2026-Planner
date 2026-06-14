@@ -81,7 +81,6 @@ input { font-family: inherit; }
 .logo-line3 { font-size: 9px; color: var(--text-faint); letter-spacing: 1px; white-space: nowrap; }
 .logo-link { color: var(--text-soft); text-decoration: none; border-bottom: 1px solid currentColor; }
 .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.view-btn-hidden { visibility: hidden; pointer-events: none; }
 .view-btns { display: flex; gap: 4px; }
 .view-btn { padding: 5px 10px; background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: 5px; color: var(--text-soft); font-size: 8px; font-weight: 700; letter-spacing: 0.5px; }
 .view-btn.active { background: var(--accent); color: var(--sel-check-text); border-color: var(--accent); }
@@ -133,7 +132,6 @@ input { font-family: inherit; }
 .list-empty { padding: 48px 16px; text-align: center; color: var(--text-ghost); }
 .list-empty-icon { font-size: 32px; margin-bottom: 12px; }
 .list-empty-text { font-size: 10px; line-height: 1.8; }
-.list-item { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--border-soft); background: var(--bg-list-item); }
 .list-time { min-width: 62px; text-align: right; }
 .list-time-main { font-size: 12px; font-weight: 700; color: var(--text-strong); }
 .list-time-end { font-size: 9px; color: var(--text-faint); font-family: monospace; }
@@ -145,13 +143,6 @@ input { font-family: inherit; }
 .list-badge { font-size: 8px; color: var(--text-faint); }
 .list-badge-live { font-size: 8px; color: var(--live); font-weight: 700; }
 .remove-btn { width: 22px; height: 22px; border-radius: 50%; background: var(--bg-surface); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--accent); flex-shrink: 0; }
-.thu-list-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
-.thu-list-item:hover { background: var(--bg-surface-hover); }
-.thu-num { min-width: 22px; font-size: 9px; color: var(--text-ghost); text-align: right; font-family: monospace; }
-.thu-name { font-size: 11px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.3px; }
-.thu-type { font-size: 8px; color: var(--text-faint); margin-top: 2px; }
-.thu-sel-indicator { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
-.section-label { padding: 10px 16px 6px; font-size: 8px; color: var(--text-faint); letter-spacing: 1px; border-bottom: 1px solid var(--border-soft); }
 
 .install-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.6); display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
 .install-card { background: var(--bg-header); border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px; max-width: 420px; width: 100%; }
@@ -183,9 +174,6 @@ input { font-family: inherit; }
 .install-card { background: var(--bg-header); border: 1px solid var(--border); border-radius: 14px; padding: 20px; max-width: 380px; width: 100%; margin-bottom: 12px; }
 .install-title { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 1px; margin-bottom: 6px; }
 .install-text { font-size: 12px; color: var(--text-mid); line-height: 1.6; margin-bottom: 14px; }
-.install-step { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text); margin-bottom: 8px; }
-.install-step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--sel-check-text); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.install-btns { display: flex; gap: 8px; margin-top: 16px; }
 .install-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; border: 1px solid var(--border-soft); }
 .install-btn-primary { background: var(--accent); color: var(--sel-check-text); border-color: var(--accent); }
 .install-btn-ghost { background: var(--bg-surface); color: var(--text-soft); }
@@ -201,11 +189,11 @@ const THU_STAGE={id:"hive_warmup",name:"HIVE WARM UP",color:"#FF6B6B"};
 
 function getCurrentTheme(){const ds=document.documentElement.getAttribute("data-theme");return ds==="light"?"light":"dark";}
 function getStage(id){if(id==="hive_warmup")return THU_STAGE;return STAGES.find(s=>s.id===id)||STAGES[0];}
+function stagesForDay(d){return d==="thursday"?[THU_STAGE]:STAGES;}
 function toMins(t){const[h,m]=t.split(":").map(Number);return h*60+m;}
 function toTime(m){const h=Math.floor(m/60)%24,mn=m%60;return String(h).padStart(2,"0")+":"+String(mn).padStart(2,"0");}
 function strColor(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))&0xffffffff;const hue=Math.abs(h)%360;const light=getCurrentTheme()==="light";return`hsl(${hue},${light?65:60}%,${light?42:50}%)`;}
 function initials(name){const p=name.replace(/[^a-zA-Z0-9 ]/g,"").split(" ").filter(Boolean);return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():name.slice(0,2).toUpperCase();}
-function hexA(hex,a){return hex+a;}
 function formatLabel(set,compact){
   if(!set.type||set.artists.length<2)return compact?set.artists.map(a=>a.split(" ")[0]).join("×"):set.artists.join(", ");
   const baseType=set.type.includes("F2F")?"F2F":set.type.includes("B2B")?"B2B":set.type;
@@ -215,18 +203,18 @@ function formatLabel(set,compact){
 }
 
 const THU_SETS=[
-  {id:"thu_1",stage:"hive_warmup",artists:["ADRIÁN MILLS","PEGASSI"],type:"F2F",start:null,end:null},
-  {id:"thu_2",stage:"hive_warmup",artists:["A.N.I.","JOVYNN"],type:"F2F",start:null,end:null},
-  {id:"thu_3",stage:"hive_warmup",artists:["CHARLIE SPARKS","NOTMYTYPE"],type:"F2F",start:null,end:null},
-  {id:"thu_4",stage:"hive_warmup",artists:["CLOUDY","SERAFINA"],type:"F2F",start:null,end:null},
-  {id:"thu_5",stage:"hive_warmup",artists:["FUMI","ÜBERKIKZ"],type:"F2F",start:null,end:null},
-  {id:"thu_6",stage:"hive_warmup",artists:["NICOLAS JULIAN","NEGITIV"],type:"F2F",start:null,end:null},
-  {id:"thu_7",stage:"hive_warmup",artists:["PARAÇEK","DJ DRECKISCH"],type:"F2F",start:null,end:null},
-  {id:"thu_8",stage:"hive_warmup",artists:["ROW1","VAGABUND"],type:"F2F",start:null,end:null},
-  {id:"thu_9",stage:"hive_warmup",artists:["TOXIC MACHINERY","SLVL","USH"],type:"F2F",start:null,end:null},
-  {id:"thu_10",stage:"hive_warmup",artists:["VIEZE ASBAK","NATTE VISSTICK"],type:"F2F",start:null,end:null},
-  {id:"thu_11",stage:"hive_warmup",artists:["WILDERÍCH","GIØ","DVAID","HUMAN ERROR"],type:"F2F+B2B",start:null,end:null},
-  {id:"thu_12",stage:"hive_warmup",artists:["ZWILLING.","PRADA2000"],type:"F2F",start:null,end:null},
+  {id:"thu_8",stage:"hive_warmup",artists:["ROW1","VAGABUND"],type:"F2F",start:"18:00",end:"19:00"},
+  {id:"thu_7",stage:"hive_warmup",artists:["PARAÇEK","DJ DRECKISCH"],type:"F2F",start:"19:00",end:"20:00"},
+  {id:"thu_5",stage:"hive_warmup",artists:["FUMI","ÜBERKIKZ"],type:"F2F",start:"20:00",end:"21:00"},
+  {id:"thu_11",stage:"hive_warmup",artists:["WILDERÍCH","GIØ","DVAID","HUMAN ERROR"],type:"F2F+B2B",start:"21:00",end:"22:00"},
+  {id:"thu_12",stage:"hive_warmup",artists:["ZWILLING.","PRADA2000"],type:"F2F",start:"22:00",end:"23:00"},
+  {id:"thu_1",stage:"hive_warmup",artists:["ADRIÁN MILLS","PEGASSI"],type:"F2F",start:"23:00",end:"00:00"},
+  {id:"thu_4",stage:"hive_warmup",artists:["CLOUDY","SERAFINA"],type:"F2F",start:"00:00",end:"01:00"},
+  {id:"thu_3",stage:"hive_warmup",artists:["CHARLIE SPARKS","NOTMYTYPE"],type:"F2F",start:"01:00",end:"02:00"},
+  {id:"thu_6",stage:"hive_warmup",artists:["NICOLAS JULIAN","NEGITIV"],type:"F2F",start:"02:00",end:"03:00"},
+  {id:"thu_2",stage:"hive_warmup",artists:["A.N.I.","JOVYNN"],type:"F2F",start:"03:00",end:"04:00"},
+  {id:"thu_10",stage:"hive_warmup",artists:["VIEZE ASBAK","NATTE VISSTICK"],type:"F2F",start:"04:00",end:"05:00"},
+  {id:"thu_9",stage:"hive_warmup",artists:["TOXIC MACHINERY","SLVL","USH"],type:"F2F",start:"05:00",end:"06:00"},
 ];
 
 const ALL_SETS={
@@ -666,7 +654,8 @@ function renderTimeline(){
   const nowLeft=showNow?(festNow.nowMin-range.start)*PX:0;
   const nowLine=showNow?`<div class="now-line" style="left:${nowLeft}px;"></div>`:"";
   // In MY mode, only show stages that have at least one selected set
-  const stageList=myFilter?STAGES.filter(st=>sets.some(s=>s.stage===st.id)):STAGES;
+  const dayStages=stagesForDay(activeDay);
+  const stageList=myFilter?dayStages.filter(st=>sets.some(s=>s.stage===st.id)):dayStages;
   const rows=stageList.map(stage=>{
     const stageSets=sets.filter(s=>s.stage===stage.id);
     const blocks=stageSets.map(set=>{
@@ -677,41 +666,6 @@ function renderTimeline(){
     return`<div class="stage-row"><div class="stage-label" style="width:${LW}px;border-right-color:${stage.color};"><span style="color:${stage.color};">${stage.name}</span></div><div class="sets-area" style="width:${totalW}px;height:${RH}px;">${hours.map(m=>`<div style="position:absolute;left:${(m-range.start)*PX}px;top:0;bottom:0;width:1px;background:var(--border-grid);"></div>`).join("")}${nowLine}${blocks}</div></div>`;
   }).join("");
   return`<div class="timeline-wrapper" data-now-left="${showNow?nowLeft:-1}"><div class="timeline-inner"><div class="timeline-header" style="margin-left:${LW}px;">${hCells}</div>${rows}</div></div>`;
-}
-
-function renderThuFullList(){
-  return`<div><div class="section-label">THURSDAY WARM UP · 18.06 · HIVE FESTIVAL FERROPOLIS · times TBD</div>${THU_SETS.map((set,i)=>{
-    const isSel=selected.has(set.id),c=strColor(set.artists[0]),label=formatLabel(set,false);
-    return`<div class="thu-list-item" data-id="${set.id}" data-action="toggle"><span class="thu-num">${String(i+1).padStart(2,"0")}</span>${renderAvatarGroup(set.artists,34)}<div style="flex:1;min-width:0;"><div class="thu-name">${label}</div>${set.type?`<div class="thu-type">${set.type}</div>`:""}</div><div class="thu-sel-indicator" style="${isSel?`background:${c}22;border-color:${c};color:${c};`:""}">${isSel?"✓":""}</div></div>`;
-  }).join("")}</div>`;
-}
-
-function renderList(){
-  const sets=ALL_SETS[activeDay]||[];
-  if(activeDay==="thursday"){
-    const ordered=THU_SETS.filter(s=>selected.has(s.id));
-    if(!ordered.length)return`<div class="list-empty"><div class="list-empty-icon">⬡</div><div class="list-empty-text">No set selected.<br><span style="font-size:9px;opacity:.6;">Use ALL to pick Thursday sets →</span></div></div>`;
-    return`<div><div class="section-label">YOUR SETS · THURSDAY WARM UP</div>${ordered.map(set=>{
-      const label=formatLabel(set,false);
-      return`<div class="list-item"><div class="list-time" style="min-width:42px;"><div style="font-size:9px;color:var(--text-ghost);font-family:monospace;">TBD</div></div><div class="stage-bar" style="background:${THU_STAGE.color};"></div>${renderAvatarGroup(set.artists,36)}<div class="list-info"><div class="list-name">${label}</div><div class="list-meta"><span class="list-stage-name" style="color:${THU_STAGE.color};">HIVE WARM UP</span>${set.type?`<span class="list-badge">${set.type}</span>`:""}</div></div><button class="remove-btn" data-id="${set.id}" data-action="remove">×</button></div>`;
-    }).join("")}</div>`;
-  }
-  const filtered=sets.filter(s=>selected.has(s.id));
-  filtered.sort((a,b)=>setNormStart(a,activeDay)-setNormStart(b,activeDay));
-  if(!filtered.length)return`<div class="list-empty"><div class="list-empty-icon">⬡</div><div class="list-empty-text">No set selected.<br><span style="font-size:9px;opacity:.6;">Go to ALL and tap the sets →</span></div></div>`;
-  const liveNow=festNow&&festNow.day===activeDay;
-  let dividerPlaced=false;
-  let out="";
-  filtered.forEach(set=>{
-    if(liveNow&&!dividerPlaced&&setNormStart(set,activeDay)>=festNow.nowMin){
-      out+=nowDivider();dividerPlaced=true;
-    }
-    const stage=getStage(set.stage),label=formatLabel(set,false);
-    const past=liveNow&&isSetPast(set,activeDay,festNow.nowMin);
-    out+=`<div class="list-item${past?" set-past":""}"><div class="list-time"><div class="list-time-main">${set.start}</div><div class="list-time-end">→ ${set.end}</div></div><div class="stage-bar" style="background:${stage.color};"></div>${renderAvatarGroup(set.artists,36)}<div class="list-info"><div class="list-name">${label}</div><div class="list-meta"><span class="list-stage-name" style="color:${stage.color};">${stage.name}</span>${set.live?`<span class="list-badge-live">● LIVE</span>`:""} ${set.type?`<span class="list-badge">${set.type}</span>`:""}</div></div><button class="remove-btn" data-id="${set.id}" data-action="remove">×</button></div>`;
-  });
-  if(liveNow&&!dividerPlaced)out+=nowDivider(); // all sets are in the past
-  return out;
 }
 
 let _nowDividerCount=0;
@@ -740,20 +694,12 @@ function renderFullRow(set,showTime){
 function renderFullList(){
   const allSets=ALL_SETS[activeDay]||[];
   const sets=myFilter?allSets.filter(s=>selected.has(s.id)):allSets;
-  const isThu=activeDay==="thursday";
   if(myFilter&&!sets.length)return emptyMyMessage();
   const sortBar=`<div class="sort-bar">
     <span class="sort-label">SORT:</span>
     <button class="sort-btn ${fullSort==="time"?"active":""}" data-action="sort" data-val="time">TIME</button>
     <button class="sort-btn ${fullSort==="stage"?"active":""}" data-action="sort" data-val="stage">STAGE</button>
   </div>`;
-
-  if(isThu){
-    // Thursday: lineup order, no times, no sort relevance (single stage)
-    const thuSets=myFilter?THU_SETS.filter(s=>selected.has(s.id)):THU_SETS;
-    if(myFilter&&!thuSets.length)return emptyMyMessage();
-    return`<div>${thuSets.map(set=>renderFullRow(set,false)).join("")}</div>`;
-  }
 
   const liveNow=festNow&&festNow.day===activeDay;
 
@@ -770,7 +716,7 @@ function renderFullList(){
   }
   // Group by stage, each group sorted by start time, stages in canonical order
   let html=sortBar;
-  STAGES.forEach(stage=>{
+  stagesForDay(activeDay).forEach(stage=>{
     const stageSets=sets.filter(s=>s.stage===stage.id).sort((a,b)=>setNormStart(a,activeDay)-setNormStart(b,activeDay));
     if(!stageSets.length)return;
     html+=`<div class="full-stage-header" style="color:${stage.color};border-left-color:${stage.color};">${stage.name}</div>`;
@@ -800,8 +746,8 @@ function renderSearchResults(){
 }
 
 function renderLegend(){
-  if(activeDay==="thursday"||activeView!=="timeline")return"";
-  return`<div class="legend">${STAGES.map(s=>`<div class="legend-item"><div class="legend-dot" style="background:${s.color};"></div><span style="font-size:7px;color:${s.color};">${s.name}</span></div>`).join("")}</div>`;
+  if(activeView!=="timeline")return"";
+  return`<div class="legend">${stagesForDay(activeDay).map(s=>`<div class="legend-item"><div class="legend-dot" style="background:${s.color};"></div><span style="font-size:7px;color:${s.color};">${s.name}</span></div>`).join("")}</div>`;
 }
 
 function renderThemeSwitch(){
@@ -810,8 +756,7 @@ function renderThemeSwitch(){
 }
 
 function getEffectiveView(){
-  // Two views only: timeline (GRID) and list (LIST). Thursday forces list.
-  if(activeDay==="thursday")return "list";
+  // Two views only: timeline (GRID) and list (LIST).
   return activeView==="list"?"list":"timeline";
 }
 
@@ -841,7 +786,7 @@ function render(){
         <div class="header-right">
           ${renderThemeSwitch()}
           <div class="view-btns">
-            <button class="view-btn ${activeView==="timeline"?"active":""}${activeDay==="thursday"?" view-btn-hidden":""}" data-action="view" data-val="timeline" ${activeDay==="thursday"?"tabindex=\"-1\" aria-hidden=\"true\"":""}>⊟ GRID</button>
+            <button class="view-btn ${activeView==="timeline"?"active":""}" data-action="view" data-val="timeline">⊟ GRID</button>
             <button class="view-btn ${activeView==="list"?"active":""}" data-action="view" data-val="list">☰ LIST</button>
             <button class="view-btn ${myFilter?"active":""}" data-action="toggleMy">★ MY</button>
           </div>
@@ -959,8 +904,11 @@ bindOutsideClick();
 loadSelectedFromIDB();
 scrollTimelineToNow();
 setTimeout(()=>{
+  // Priority: install prompt first, then the one-off announcement, then daily messages.
+  // Only one popup per launch — never stack two.
+  if(maybeShowInstall())return;
+  if(maybeShowAnnouncement())return;
   maybeShowDailyMessage();
-  if(!document.getElementById("dailyOverlay"))maybeShowInstall();
 },900);
 
 function scrollTimelineToNow(){
@@ -1011,8 +959,8 @@ window.addEventListener("beforeinstallprompt",(e)=>{
 });
 
 function maybeShowInstall(){
-  if(isStandalone())return;
-  if(persistGetSync("hive_install_off")==="1")return;
+  if(isStandalone())return false;
+  if(persistGetSync("hive_install_off")==="1")return false;
   const ios=isIOS();
   const card=document.createElement("div");
   card.className="install-overlay";
@@ -1054,6 +1002,7 @@ function maybeShowInstall(){
       }else{card.remove();}
     }
   });
+  return true;
 }
 
 // ===== DAILY MESSAGES =====
@@ -1073,11 +1022,11 @@ function getDailyMessageId(){
   const fn=getFestivalNow();
   if(fn)return fn.day;            // live festival day (respects the 09:00 window)
   // Thursday warmup starts at 18:00 in the timeline, but the daily message should be
-  // available from 09:00 like the other days. Handle that window explicitly.
+  // available from 14:00. Handle that window explicitly.
   const now=new Date();
   if(now.getFullYear()===2026&&now.getMonth()===5){
     const curMin=now.getHours()*60+now.getMinutes();
-    if(now.getDate()===FEST_DATES.thursday&&curMin>=540&&curMin<18*60)return "thursday";
+    if(now.getDate()===FEST_DATES.thursday&&curMin>=840&&curMin<18*60)return "thursday";
   }
   if(isAfterFestival())return "after";
   return null;
@@ -1122,6 +1071,35 @@ function maybeShowDailyMessage(){
     const t=e.target.closest("[data-daily]");
     if(t){persistSet(msgKey(id),"1");card.remove();}
   });
+}
+
+// One-off announcement, NOT tied to any date. Shown once on the next launch and
+// dismissed forever as soon as the button is tapped. Bump the id to broadcast a new one.
+const ANNOUNCEMENT={
+  id:"warmup_times_v1",
+  title:"🐝 WARM-UP TIMETABLE",
+  text:"<b style='color:var(--accent);'>Thursday now comes with real set times.</b><br>This is a standard technical communication delivered at maximum volume for your convenience. Sadly, the app still has no sound, so you’ll have to imagine me yelling."
+};
+function annKey(){return "hive_ann_"+ANNOUNCEMENT.id;}
+function maybeShowAnnouncement(){
+  if(persistGetSync(annKey())==="1")return false; // already dismissed, never again
+  const card=document.createElement("div");
+  card.className="install-overlay";
+  card.id="dailyOverlay";
+  card.innerHTML=`
+    <div class="install-card">
+      <div class="install-title">${ANNOUNCEMENT.title}</div>
+      <div class="install-text">${ANNOUNCEMENT.text}</div>
+      <div class="install-actions">
+        <button class="install-btn install-btn-primary" data-ann="close">GOT IT 🐝</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(card);
+  card.addEventListener("click",(e)=>{
+    if(e.target.closest("[data-ann]")){persistSet(annKey(),"1");card.remove();}
+  });
+  return true;
 }
 
 if("serviceWorker" in navigator){
