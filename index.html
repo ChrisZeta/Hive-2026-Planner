@@ -177,6 +177,32 @@ input { font-family: inherit; }
 .install-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; border: 1px solid var(--border-soft); }
 .install-btn-primary { background: var(--accent); color: var(--sel-check-text); border-color: var(--accent); }
 .install-btn-ghost { background: var(--bg-surface); color: var(--text-soft); }
+/* ===== MAP OVERLAY ===== */
+.map-btn { white-space: nowrap; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; padding: 5px 12px; border-radius: 5px; background: var(--bg-surface); border: 1px solid var(--border-soft); color: var(--text-soft); line-height: 1; }
+.map-overlay { position: fixed; inset: 0; z-index: 1500; background: var(--bg); display: flex; flex-direction: column; touch-action: none; }
+.map-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-header); border-bottom: 1px solid var(--border); }
+.map-tabs { display: flex; gap: 4px; }
+.map-tab { padding: 7px 16px; background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: 6px; color: var(--text-soft); font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.map-tab.active { background: var(--accent); border-color: var(--accent); color: var(--sel-check-text); }
+.map-close { width: 34px; height: 34px; border-radius: 8px; background: var(--bg-surface); border: 1px solid var(--border-soft); color: var(--text-mid); font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.map-stage { flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+.map-img { max-width: 100%; max-height: 100%; will-change: transform; transform-origin: center center; user-select: none; -webkit-user-drag: none; }
+.map-hint { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; padding: 8px; font-size: 9px; color: var(--text-faint); letter-spacing: 0.5px; pointer-events: none; transition: opacity 0.4s; background: linear-gradient(to top, var(--bg), transparent); }
+.map-hint.hide { opacity: 0; }
+
+/* ===== MAP CHIPS + HAND-DRAWN HIGHLIGHT (phase C) ===== */
+.map-chips { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 12px; background: var(--bg-header); border-bottom: 1px solid var(--border); }
+.map-amenrow { display: flex; gap: 5px; flex-wrap: wrap; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft); }
+.map-stagechips { display: flex; flex-wrap: wrap; gap: 5px; }
+.map-chip { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 5px 9px; border-radius: 20px; background: var(--bg-surface); border: 1px solid var(--c); color: var(--c); opacity: 0.85; }
+.map-chip.active { background: var(--c); color: #000; opacity: 1; }
+.map-amenchip { background: #86d8ff; border-color: #86d8ff; color: #000; opacity: 0.82; }
+.map-amenchip.active { background: #86d8ff; color: #000; opacity: 1; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.6); }
+.map-content { position: relative; transform-origin: center center; will-change: transform; }
+.map-content .map-img { display: block; width: 100%; height: 100%; max-width: none; max-height: none; }
+.map-hilite { position: absolute; inset: 0; pointer-events: none; }
+.map-circle { position: absolute; transform: translate(-50%,-50%) rotate(var(--rot,0deg)); overflow: visible; }
+.map-circle path { fill: none; stroke: #ff2e2e; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55)); }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script defer src="https://umami-nine-chi.vercel.app/script.js" data-website-id="f213189e-c5fe-461c-bfd4-8d1ab629dc80"></script>
@@ -794,7 +820,7 @@ function render(){
       </div>
       <div class="day-row">
         ${["thursday","friday","saturday","sunday"].map(d=>`<button class="day-btn ${activeDay===d?"active":""}" data-action="day" data-val="${d}">${getDayLabel(d)}</button>`).join("")}
-        <div class="action-btns"><button class="search-toggle ${searchOpen?"active":""}" data-action="toggleSearch" aria-label="Search">SEARCH</button></div>
+        <div class="action-btns"><button class="map-btn" data-action="map" aria-label="Map">MAP</button><button class="search-toggle ${searchOpen?"active":""}" data-action="toggleSearch" aria-label="Search">SEARCH</button></div>
       </div>
     </div>
     ${searchOpen?`<div class="search-bar" id="searchBar">
@@ -869,6 +895,7 @@ function handleClick(e){
   const el=e.target.closest("[data-action]");if(!el)return;
   const action=el.dataset.action;
   if(action==="theme"){setTheme(el.dataset.val);return;}
+  if(action==="map"){openMapOverlay();return;}
   if(action==="view"){activeView=el.dataset.val;persistSet("hive_view",activeView);render();return;}
   if(action==="toggleMy"){myFilter=!myFilter;persistSet("hive_myfilter",myFilter?"1":"0");render();scrollTimelineToNow();return;}
   if(action==="day"){activeDay=el.dataset.val;render();scrollTimelineToNow();return;}
@@ -1076,9 +1103,9 @@ function maybeShowDailyMessage(){
 // One-off announcement, NOT tied to any date. Shown once on the next launch and
 // dismissed forever as soon as the button is tapped. Bump the id to broadcast a new one.
 const ANNOUNCEMENT={
-  id:"warmup_times_v1",
-  title:"🐝 WARM-UP TIMETABLE",
-  text:"<b style='color:var(--accent);'>Thursday now comes with real set times.</b><br>This is a standard technical communication delivered at maximum volume for your convenience. Sadly, the app still has no sound, so you’ll have to imagine me screaming."
+  id:"maps_v1",
+  title:"🐝 FESTIVAL MAP",
+  text:"<b style='color:var(--accent);'>The map finally lives in here. Camping and Infield, every stage, and the things that keep you alive: toilets and water stations. Tap a label up top and I circle it for you. You're welcome.</b><br>This is another standard technical communication delivered at maximum volume for your convenience. Sadly, the app still has no sound, so you’ll have to imagine me screaming it."
 };
 function annKey(){return "hive_ann_"+ANNOUNCEMENT.id;}
 function maybeShowAnnouncement(){
@@ -1121,6 +1148,198 @@ if("serviceWorker" in navigator){
     }).catch(()=>{});
   });
 }
+// ===== FESTIVAL MAP OVERLAY (split CAMPING / INFIELD, zoom/pan + hand-drawn highlight) =====
+const MAP_IMAGES={camping:"./camping.webp",infield:"./infield.webp"};
+const MAP_NATURAL={camping:[1248,640],infield:[1248,612]};
+const STAGE_POS={
+  sleepless:[20.4,9.8], libidoh_lab:[54.6,33.5], techno_castle:[50.1,53.1],
+  groove_beach:[48.5,81.7], rage_cage:[74.3,43.6], junkyard:[66.9,61.6],
+  disco_forest:[66.7,78.4], pirate_bay:[57.3,89.4], bounce_temple:[83.7,47.7],
+  psy_lagoon:[87.7,74.3]
+};
+const STAGE_SIZE={
+  sleepless:0.215, rage_cage:0.183, groove_beach:0.175, techno_castle:0.170,
+  junkyard:0.170, disco_forest:0.170, bounce_temple:0.170, psy_lagoon:0.162,
+  pirate_bay:0.142, libidoh_lab:0.122
+};
+// amenities: [xPct, yPct, sizeFrac] per map tab
+const AMEN={
+  infield:{
+    toilets:[[24.7,14.2,0.050],[46.2,29.9,0.053],[68.1,49.3,0.056],[45.2,49.8,0.034],[58.2,57.8,0.035],[84.8,65.4,0.059],[75.0,70.1,0.049],[55.8,70.4,0.058],[64.4,85.3,0.052]],
+    water:[[70.9,50.8,0.055],[84.1,70.4,0.040],[52.6,71.9,0.055]]
+  },
+  camping:{
+    toilets:[],
+    water:[[57.4,35.0,0.049],[54.3,45.5,0.052],[19.2,52.0,0.052]]
+  }
+};
+let _map=null,_mapResize=null;
+function openMapOverlay(){
+  if(document.getElementById("mapOverlay"))return;
+  const ov=document.createElement("div");
+  ov.className="map-overlay";ov.id="mapOverlay";
+  const chips=STAGES.map(s=>`<button class="map-chip" data-chip="${s.id}" style="--c:${s.color};">${s.name}</button>`).join("");
+  ov.innerHTML=`
+    <div class="map-bar">
+      <div class="map-tabs">
+        <button class="map-tab active" data-map-tab="infield">INFIELD</button>
+        <button class="map-tab" data-map-tab="camping">CAMPING</button>
+      </div>
+      <button class="map-close" data-map-close aria-label="Close">\u2715</button>
+    </div>
+    <div class="map-chips" id="mapChips">
+      <div class="map-amenrow">
+        <button class="map-chip map-amenchip" data-amenity="toilets">\u{1F6BB} TOILETS</button>
+        <button class="map-chip map-amenchip" data-amenity="water">\u{1F4A7} WATER STATIONS</button>
+      </div>
+      <div class="map-stagechips" id="mapStageChips">${chips}</div>
+    </div>
+    <div class="map-stage" id="mapStage">
+      <div class="map-content" id="mapContent">
+        <img class="map-img" id="mapImg" src="${MAP_IMAGES.infield}" draggable="false" alt="Festival map - infield">
+        <div class="map-hilite" id="mapHilite"></div>
+      </div>
+    </div>
+    <div class="map-hint" id="mapHint">In alto tocca uno stage o un servizio per cerchiarlo \u00b7 pinch per zoomare</div>`;
+  document.body.appendChild(ov);
+  _map={tab:"infield",scale:1,tx:0,ty:0,min:1,max:5,sel:null};
+  const img=ov.querySelector("#mapImg");
+  if(img.complete&&img.naturalWidth)resizeMapContent();else img.addEventListener("load",resizeMapContent,{once:true});
+  _mapResize=resizeMapContent;window.addEventListener("resize",_mapResize);
+  bindMapOverlay(ov);
+}
+function closeMapOverlay(){
+  if(_mapResize){window.removeEventListener("resize",_mapResize);_mapResize=null;}
+  const o=document.getElementById("mapOverlay");if(o)o.remove();_map=null;
+}
+function resizeMapContent(){
+  const stage=document.getElementById("mapStage"),content=document.getElementById("mapContent");
+  if(!stage||!content||!_map)return;
+  const nat=MAP_NATURAL[_map.tab],cw=stage.clientWidth,ch=stage.clientHeight;
+  const fit=Math.min(cw/nat[0],ch/nat[1]);
+  content.style.width=(nat[0]*fit)+"px";content.style.height=(nat[1]*fit)+"px";
+  mapClamp();mapApply();
+}
+function mapApply(){const c=document.getElementById("mapContent");if(!c||!_map)return;c.style.transform=`translate(${_map.tx}px,${_map.ty}px) scale(${_map.scale})`;}
+function mapClamp(){
+  const stage=document.getElementById("mapStage"),c=document.getElementById("mapContent");if(!stage||!c||!_map)return;
+  const sw=stage.clientWidth,sh=stage.clientHeight,bw=c.offsetWidth,bh=c.offsetHeight;
+  const maxX=Math.max(0,(bw*_map.scale-sw)/2),maxY=Math.max(0,(bh*_map.scale-sh)/2);
+  _map.tx=Math.max(-maxX,Math.min(maxX,_map.tx));_map.ty=Math.max(-maxY,Math.min(maxY,_map.ty));
+}
+function mapZoomTo(newScale,fx,fy){
+  if(!_map)return;
+  const stage=document.getElementById("mapStage");if(!stage)return;
+  const r=stage.getBoundingClientRect();
+  const px=(fx==null?r.left+r.width/2:fx)-(r.left+r.width/2);
+  const py=(fy==null?r.top+r.height/2:fy)-(r.top+r.height/2);
+  const s0=_map.scale,s1=Math.max(_map.min,Math.min(_map.max,newScale));
+  _map.tx=px-(px-_map.tx)*(s1/s0);_map.ty=py-(py-_map.ty)*(s1/s0);_map.scale=s1;
+  if(s1<=_map.min+0.001){_map.tx=0;_map.ty=0;}
+  mapClamp();mapApply();
+}
+function roughCircle(){
+  const cx=50,cy=50,rx=35+Math.random()*5,ry=31+Math.random()*5;
+  const n=18,start=Math.random()*Math.PI*2,turn=Math.PI*2*1.08;const pts=[];
+  for(let i=0;i<=n;i++){const a=start+turn*(i/n),jr=1+(Math.random()*0.12-0.06);pts.push([cx+Math.cos(a)*rx*jr,cy+Math.sin(a)*ry*jr]);}
+  let d="M"+pts[0][0].toFixed(1)+" "+pts[0][1].toFixed(1);
+  for(let i=1;i<pts.length-1;i++){const mx=(pts[i][0]+pts[i+1][0])/2,my=(pts[i][1]+pts[i+1][1])/2;d+=" Q"+pts[i][0].toFixed(1)+" "+pts[i][1].toFixed(1)+" "+mx.toFixed(1)+" "+my.toFixed(1);}
+  return d;
+}
+function mapClearCircle(){const b=document.getElementById("mapHilite");if(b)b.innerHTML="";}
+function mapDrawSet(items,sw){
+  sw=sw||[2.7,1.8];
+  const box=document.getElementById("mapHilite"),c=document.getElementById("mapContent");
+  if(!box||!c){return;}
+  if(!items||!items.length){box.innerHTML="";return;}
+  const cw=c.offsetWidth;let html="";
+  items.forEach(it=>{
+    const size=Math.max(36,cw*it[2]),rot=(Math.random()*16-8).toFixed(1);
+    html+=`<svg class="map-circle" style="left:${it[0]}%;top:${it[1]}%;width:${size}px;height:${size}px;--rot:${rot}deg;" viewBox="0 0 100 100"><path d="${roughCircle()}" stroke-width="${sw[0]}"></path><path d="${roughCircle()}" stroke-width="${sw[1]}" opacity="0.78"></path></svg>`;
+  });
+  box.innerHTML=html;
+  box.querySelectorAll("svg").forEach((svg,gi)=>{
+    svg.querySelectorAll("path").forEach((pa,pi)=>{
+      try{const L=pa.getTotalLength();pa.style.strokeDasharray=L;pa.style.strokeDashoffset=L;pa.getBoundingClientRect();
+        pa.style.transition="stroke-dashoffset 0.45s ease";pa.style.transitionDelay=(Math.min(gi*0.05,0.55)+pi*0.1)+"s";pa.style.strokeDashoffset="0";}catch(e){}
+    });
+  });
+}
+function updateChipActives(){
+  const sel=_map&&_map.sel;
+  document.querySelectorAll(".map-chip[data-chip]").forEach(c=>c.classList.toggle("active",!!sel&&sel.kind==="stage"&&sel.id===c.dataset.chip));
+  document.querySelectorAll(".map-chip[data-amenity]").forEach(c=>c.classList.toggle("active",!!sel&&sel.kind==="amenity"&&sel.id===c.dataset.amenity));
+}
+function clearSel(){if(_map)_map.sel=null;updateChipActives();mapClearCircle();}
+function selectStage(id){
+  if(!_map||_map.tab!=="infield")return;
+  if(_map.sel&&_map.sel.kind==="stage"&&_map.sel.id===id){clearSel();return;}
+  _map.sel={kind:"stage",id:id};updateChipActives();
+  const p=STAGE_POS[id],c=document.getElementById("mapContent");if(!p||!c)return;
+  const cw=c.offsetWidth,ch=c.offsetHeight,s=2.0;
+  const ox=(p[0]/100*cw)-cw/2,oy=(p[1]/100*ch)-ch/2;
+  _map.scale=s;_map.tx=-ox*s;_map.ty=-oy*s;mapClamp();
+  c.style.transition="transform 0.38s ease";mapApply();
+  setTimeout(()=>{const cc=document.getElementById("mapContent");if(cc)cc.style.transition="";},430);
+  mapDrawSet([[p[0],p[1],(STAGE_SIZE[id]||0.17)]],[3.6,2.3]);
+}
+function selectAmenity(type){
+  if(!_map)return;
+  if(_map.sel&&_map.sel.kind==="amenity"&&_map.sel.id===type){clearSel();return;}
+  _map.sel={kind:"amenity",id:type};updateChipActives();
+  _map.scale=1;_map.tx=0;_map.ty=0;
+  const c=document.getElementById("mapContent");
+  if(c){c.style.transition="transform 0.3s ease";mapApply();setTimeout(()=>{const cc=document.getElementById("mapContent");if(cc)cc.style.transition="";},340);}
+  mapDrawSet((AMEN[_map.tab]&&AMEN[_map.tab][type])||[],[5.6,3.6]);
+}
+function mapSwitch(tab){
+  if(!_map||_map.tab===tab)return;
+  _map.tab=tab;_map.scale=1;_map.tx=0;_map.ty=0;
+  const img=document.getElementById("mapImg");if(img){img.src=MAP_IMAGES[tab];img.alt="Festival map - "+tab;}
+  document.querySelectorAll(".map-tab").forEach(b=>b.classList.toggle("active",b.dataset.mapTab===tab));
+  const sc=document.getElementById("mapStageChips");if(sc)sc.style.display=tab==="infield"?"flex":"none";
+  resizeMapContent();
+  if(_map.sel&&_map.sel.kind==="amenity"){updateChipActives();mapDrawSet((AMEN[tab]&&AMEN[tab][_map.sel.id])||[],[5.6,3.6]);}
+  else{_map.sel=null;updateChipActives();mapClearCircle();}
+}
+function bindMapOverlay(ov){
+  const stage=ov.querySelector("#mapStage"),hint=ov.querySelector("#mapHint");
+  ov.addEventListener("click",e=>{
+    if(e.target.closest("[data-map-close]"))return closeMapOverlay();
+    const tab=e.target.closest("[data-map-tab]");if(tab)return mapSwitch(tab.dataset.mapTab);
+    const ac=e.target.closest("[data-amenity]");if(ac)return selectAmenity(ac.dataset.amenity);
+    const stg=e.target.closest("[data-chip]");if(stg)return selectStage(stg.dataset.chip);
+  });
+  let hideHint=()=>{if(hint){hint.classList.add("hide");hideHint=()=>{};}};
+  let pts=new Map(),startDist=0,startScale=1,lastTap=0,panX=0,panY=0,baseTx=0,baseTy=0;
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  function mid(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+  stage.addEventListener("touchstart",e=>{
+    hideHint();
+    for(const t of e.changedTouches)pts.set(t.identifier,{x:t.clientX,y:t.clientY});
+    const arr=[...pts.values()];
+    if(arr.length===2){startDist=dist(arr[0],arr[1])||1;startScale=_map.scale;}
+    else if(arr.length===1){panX=arr[0].x;panY=arr[0].y;baseTx=_map.tx;baseTy=_map.ty;
+      const now=Date.now();if(now-lastTap<300){mapZoomTo(_map.scale>1.2?1:2.6,arr[0].x,arr[0].y);lastTap=0;}else lastTap=now;}
+  },{passive:false});
+  stage.addEventListener("touchmove",e=>{
+    e.preventDefault();
+    for(const t of e.changedTouches){if(pts.has(t.identifier))pts.set(t.identifier,{x:t.clientX,y:t.clientY});}
+    const arr=[...pts.values()];
+    if(arr.length===2){const d=dist(arr[0],arr[1]),m=mid(arr[0],arr[1]);mapZoomTo(startScale*(d/startDist),m.x,m.y);}
+    else if(arr.length===1&&_map.scale>1){_map.tx=baseTx+(arr[0].x-panX);_map.ty=baseTy+(arr[0].y-panY);mapClamp();mapApply();}
+  },{passive:false});
+  function endTouch(e){for(const t of e.changedTouches)pts.delete(t.identifier);
+    const arr=[...pts.values()];if(arr.length===1){panX=arr[0].x;panY=arr[0].y;baseTx=_map.tx;baseTy=_map.ty;}}
+  stage.addEventListener("touchend",endTouch);stage.addEventListener("touchcancel",endTouch);
+  stage.addEventListener("wheel",e=>{e.preventDefault();hideHint();mapZoomTo(_map.scale*(e.deltaY<0?1.15:0.87),e.clientX,e.clientY);},{passive:false});
+  let dragging=false,mx=0,my=0,mtx=0,mty=0;
+  stage.addEventListener("mousedown",e=>{if(_map.scale<=1)return;dragging=true;mx=e.clientX;my=e.clientY;mtx=_map.tx;mty=_map.ty;});
+  window.addEventListener("mousemove",e=>{if(!dragging||!_map)return;_map.tx=mtx+(e.clientX-mx);_map.ty=mty+(e.clientY-my);mapClamp();mapApply();});
+  window.addEventListener("mouseup",()=>{dragging=false;});
+  document.addEventListener("keydown",function esc(ev){if(ev.key==="Escape"){closeMapOverlay();document.removeEventListener("keydown",esc);}});
+}
+
 </script>
 </body>
 </html>

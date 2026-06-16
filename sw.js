@@ -1,8 +1,10 @@
-const CACHE = "hive2026-v23";
+const CACHE = "hive2026-v24";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./camping.webp",
+  "./infield.webp",
   "https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
 ];
 
