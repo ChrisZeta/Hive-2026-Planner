@@ -177,6 +177,9 @@ input { font-family: inherit; }
 .install-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; border: 1px solid var(--border-soft); }
 .install-btn-primary { background: var(--accent); color: var(--sel-check-text); border-color: var(--accent); }
 .install-btn-ghost { background: var(--bg-surface); color: var(--text-soft); }
+.install-card.crit { border: 2px solid var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 12px 44px rgba(0,0,0,0.55); }
+.install-card.crit .install-title { display: flex; align-items: center; gap: 6px; }
+.install-card.crit .install-text { color: var(--text-strong); }
 /* ===== MAP OVERLAY ===== */
 .map-btn { white-space: nowrap; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; padding: 5px 12px; border-radius: 5px; background: var(--bg-surface); border: 1px solid var(--border-soft); color: var(--text-soft); line-height: 1; }
 .map-overlay { position: fixed; inset: 0; z-index: 1500; background: var(--bg); display: flex; flex-direction: column; touch-action: none; }
@@ -931,8 +934,9 @@ bindOutsideClick();
 loadSelectedFromIDB();
 scrollTimelineToNow();
 setTimeout(()=>{
-  // Priority: install prompt first, then the one-off announcement, then daily messages.
-  // Only one popup per launch — never stack two.
+  // Priority: critical alert first, then install prompt, then the one-off announcement, then daily messages.
+  // Only one popup per launch, never stack two.
+  if(maybeShowCritical())return;
   if(maybeShowInstall())return;
   if(maybeShowAnnouncement())return;
   maybeShowDailyMessage();
@@ -1125,6 +1129,40 @@ function maybeShowAnnouncement(){
   document.body.appendChild(card);
   card.addEventListener("click",(e)=>{
     if(e.target.closest("[data-ann]")){persistSet(annKey(),"1");card.remove();}
+  });
+  return true;
+}
+
+// ===== CRITICAL ALERT =====
+// Highest-priority one-off message, NOT tied to any date. Shown before everything else
+// (even the install prompt) once per device, and silenced forever as soon as the button
+// is tapped. Tapping the backdrop does nothing, so it must be acknowledged.
+// Bump the id to broadcast a new critical alert to everyone.
+const CRITICAL={
+  id:"timetable_friday_v1",
+  title:"⚠️ ABOUT FRIDAY",
+  text:"Friday's timetable changed at the last minute. Some set times were wrong in here AND on the printed boards at the stage entrances. For the rest of the weekend, double-check the times that actually matter to you."
+};
+function critKey(){return "hive_crit_"+CRITICAL.id;}
+function maybeShowCritical(){
+  if(persistGetSync(critKey())==="1")return false; // already dismissed, never again
+  const card=document.createElement("div");
+  card.className="install-overlay";
+  card.id="critOverlay";
+  card.innerHTML=`
+    <div class="install-card crit">
+      <div class="install-title">${CRITICAL.title}</div>
+      <div class="install-text">${CRITICAL.text}</div>
+      <div class="install-actions">
+        <button class="install-btn install-btn-primary" data-crit="close">UNDERSTOOD</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(card);
+  // Mark as read ONLY when the button is tapped (backdrop taps are ignored), so a stray
+  // tap can't silence a safety-relevant warning by accident.
+  card.addEventListener("click",(e)=>{
+    if(e.target.closest("[data-crit]")){persistSet(critKey(),"1");card.remove();}
   });
   return true;
 }
